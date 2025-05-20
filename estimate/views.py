@@ -13,8 +13,8 @@ from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
 import logging
 import traceback
-from weasyprint import HTML, CSS
-from django.template.loader import render_to_string
+from docx_replace import docx_replace
+from docx2pdf import convert
 
 logger = logging.getLogger(__name__)
 
@@ -137,51 +137,43 @@ def generate_pdf(request, estimate_id):
             messages.error(request, 'Template file not found. Please contact support.')
             return redirect('dashboard')
             
-        doc = Document(template_path)
-        current_year = str(datetime.now().year)
-        replacements = {
-            '<partyname>': estimate.party_name,
-            '<date>': str(estimate.date),
-            '<paverblocktype>': str(estimate.paver_block_type),
-            '<rate1>': str(estimate.price),
-            '<rate2>': str(estimate.gst_amount),
-            '<rate3>': str(estimate.transportation_charge),
-            '<rate4>': str(estimate.loading_unloading_cost),
-            '<rate5>': str(estimate.loading_unloading_cost),
-            '<rate>': str(estimate.total_amount),
-            '<year>': current_year,
-            '<NOTE>': estimate.notes or '',
-        }
-
-        # Replace in all paragraphs
-        for paragraph in doc.paragraphs:
-            replace_placeholders_in_element(paragraph, replacements)
-
-        # Replace in all tables (all cells)
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    replace_placeholders_in_element(cell, replacements)
-
         # Create temporary files
         with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as docx_file:
             docx_filename = docx_file.name
-            doc.save(docx_filename)
-            logger.info(f"Saved DOCX file to: {docx_filename}")
+            
+            # Copy template to temp file
+            with open(template_path, 'rb') as src:
+                with open(docx_filename, 'wb') as dst:
+                    dst.write(src.read())
+            
+            logger.info(f"Copied template to: {docx_filename}")
+            
+            # Replace placeholders
+            replacements = {
+                '<partyname>': estimate.party_name,
+                '<date>': str(estimate.date),
+                '<paverblocktype>': str(estimate.paver_block_type),
+                '<rate1>': str(estimate.price),
+                '<rate2>': str(estimate.gst_amount),
+                '<rate3>': str(estimate.transportation_charge),
+                '<rate4>': str(estimate.loading_unloading_cost),
+                '<rate5>': str(estimate.loading_unloading_cost),
+                '<rate>': str(estimate.total_amount),
+                '<year>': str(datetime.now().year),
+                '<NOTE>': estimate.notes or '',
+            }
+            
+            # Replace placeholders in the document
+            docx_replace(docx_filename, replacements)
+            logger.info("Replaced placeholders in document")
 
         try:
-            # Convert DOCX to HTML first
-            html_content = render_to_string('estimate/pdf_template.html', {
-                'estimate': estimate,
-                'current_year': current_year,
-            })
-            
-            # Create PDF from HTML
+            # Convert to PDF
             pdf_filename = docx_filename.replace('.docx', '.pdf')
-            logger.info("Attempting PDF conversion with WeasyPrint")
+            logger.info("Attempting PDF conversion")
             
-            # Convert HTML to PDF
-            HTML(string=html_content).write_pdf(pdf_filename)
+            # Convert the document
+            convert(docx_filename, pdf_filename)
             
             if os.path.exists(pdf_filename):
                 logger.info(f"PDF file created successfully at: {pdf_filename}")
