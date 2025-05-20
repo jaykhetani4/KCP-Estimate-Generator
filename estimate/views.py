@@ -11,8 +11,10 @@ from datetime import datetime
 from .models import Estimate, PaverBlockType
 from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
-import comtypes.client
-import pythoncom
+import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 def login_view(request):
     if request.method == 'POST':
@@ -124,81 +126,65 @@ def replace_placeholders_in_element(element, replacements):
 
 @login_required
 def generate_pdf(request, estimate_id):
-    estimate = get_object_or_404(Estimate, id=estimate_id, created_by=request.user)
-    doc = Document('KCP_LETTERPAD.docx')
-    current_year = str(datetime.now().year)
-    replacements = {
-        '<partyname>': estimate.party_name,
-        '<date>': str(estimate.date),
-        '<paverblocktype>': str(estimate.paver_block_type),
-        '<rate1>': str(estimate.price),
-        '<rate2>': str(estimate.gst_amount),
-        '<rate3>': str(estimate.transportation_charge),
-        '<rate4>': str(estimate.transportation_charge),
-        '<rate5>': str(estimate.loading_unloading_cost),
-        '<rate>': str(estimate.total_amount),
-        '<year>': current_year,
-        '<NOTE>': estimate.notes or '',
-    }
-
-    # Replace in all paragraphs
-    for paragraph in doc.paragraphs:
-        replace_placeholders_in_element(paragraph, replacements)
-
-    # Replace in all tables (all cells)
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                replace_placeholders_in_element(cell, replacements)
-
-    # Create temporary files
-    with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as docx_file:
-        docx_filename = docx_file.name
-        doc.save(docx_filename)
-
     try:
-        # Initialize COM
-        pythoncom.CoInitialize()
-        
-        # Create Word application
-        word = comtypes.client.CreateObject('Word.Application')
-        word.Visible = False
-        
-        # Open the document
-        doc = word.Documents.Open(os.path.abspath(docx_filename))
-        
-        # Create PDF filename
-        pdf_filename = docx_filename.replace('.docx', '.pdf')
-        
-        # Save as PDF
-        doc.SaveAs(os.path.abspath(pdf_filename), FileFormat=17)  # 17 represents PDF format
-        
-        # Close the document and Word
-        doc.Close()
-        word.Quit()
-        
-        # Read the generated PDF
-        with open(pdf_filename, 'rb') as f:
-            response = HttpResponse(f.read(), content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.pdf"'
-        
-        # Clean up temporary files
-        os.remove(docx_filename)
-        os.remove(pdf_filename)
-        
-        return response
-        
+        estimate = get_object_or_404(Estimate, id=estimate_id, created_by=request.user)
+        doc = Document('KCP_LETTERPAD.docx')
+        current_year = str(datetime.now().year)
+        replacements = {
+            '<partyname>': estimate.party_name,
+            '<date>': str(estimate.date),
+            '<paverblocktype>': str(estimate.paver_block_type),
+            '<rate1>': str(estimate.price),
+            '<rate2>': str(estimate.gst_amount),
+            '<rate3>': str(estimate.transportation_charge),
+            '<rate4>': str(estimate.transportation_charge),
+            '<rate5>': str(estimate.loading_unloading_cost),
+            '<rate>': str(estimate.total_amount),
+            '<year>': current_year,
+            '<NOTE>': estimate.notes or '',
+        }
+
+        # Replace in all paragraphs
+        for paragraph in doc.paragraphs:
+            replace_placeholders_in_element(paragraph, replacements)
+
+        # Replace in all tables (all cells)
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    replace_placeholders_in_element(cell, replacements)
+
+        # Create temporary files
+        with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as docx_file:
+            docx_filename = docx_file.name
+            doc.save(docx_filename)
+
+        try:
+            # Try to convert using LibreOffice if available
+            pdf_filename = docx_filename.replace('.docx', '.pdf')
+            subprocess.run(['soffice', '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename], check=True)
+            
+            if os.path.exists(pdf_filename):
+                with open(pdf_filename, 'rb') as f:
+                    response = HttpResponse(f.read(), content_type='application/pdf')
+                    response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.pdf"'
+                os.remove(pdf_filename)
+                os.remove(docx_filename)
+                return response
+        except Exception as e:
+            logger.warning(f"PDF conversion failed: {str(e)}")
+            # If PDF conversion fails, return the DOCX file
+            with open(docx_filename, 'rb') as f:
+                response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.docx"'
+            os.remove(docx_filename)
+            messages.warning(request, 'PDF conversion failed. Downloading DOCX file instead.')
+            return response
+
     except Exception as e:
-        # If PDF conversion fails, return the DOCX file
-        with open(docx_filename, 'rb') as f:
-            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-            response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.docx"'
-        os.remove(docx_filename)
-        messages.warning(request, 'PDF conversion failed. Downloading DOCX file instead.')
-        return response
-    finally:
-        # Clean up COM
-        pythoncom.CoUninitialize()
+        logger.error(f"Error in generate_pdf: {str(e)}")
+        messages.error(request, f'Error generating document: {str(e)}')
+        return redirect('dashboard')
 
 @login_required
 def delete_estimate(request, estimate_id):
