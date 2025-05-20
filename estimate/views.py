@@ -13,6 +13,7 @@ from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
 import subprocess
 import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +129,14 @@ def replace_placeholders_in_element(element, replacements):
 def generate_pdf(request, estimate_id):
     try:
         estimate = get_object_or_404(Estimate, id=estimate_id, created_by=request.user)
-        doc = Document('KCP_LETTERPAD.docx')
+        template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'KCP_LETTERPAD.docx')
+        
+        if not os.path.exists(template_path):
+            logger.error(f"Template file not found at: {template_path}")
+            messages.error(request, 'Template file not found. Please contact support.')
+            return redirect('dashboard')
+            
+        doc = Document(template_path)
         current_year = str(datetime.now().year)
         replacements = {
             '<partyname>': estimate.party_name,
@@ -158,21 +166,44 @@ def generate_pdf(request, estimate_id):
         with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as docx_file:
             docx_filename = docx_file.name
             doc.save(docx_filename)
+            logger.info(f"Saved DOCX file to: {docx_filename}")
 
         try:
             # Try to convert using LibreOffice if available
             pdf_filename = docx_filename.replace('.docx', '.pdf')
-            subprocess.run(['soffice', '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename], check=True)
+            logger.info("Attempting PDF conversion with LibreOffice")
+            
+            # Run LibreOffice conversion
+            result = subprocess.run(
+                ['soffice', '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            logger.info(f"LibreOffice conversion output: {result.stdout}")
+            if result.stderr:
+                logger.warning(f"LibreOffice conversion warnings: {result.stderr}")
             
             if os.path.exists(pdf_filename):
+                logger.info(f"PDF file created successfully at: {pdf_filename}")
                 with open(pdf_filename, 'rb') as f:
                     response = HttpResponse(f.read(), content_type='application/pdf')
                     response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.pdf"'
                 os.remove(pdf_filename)
                 os.remove(docx_filename)
                 return response
+            else:
+                logger.error(f"PDF file not created at expected location: {pdf_filename}")
+                raise FileNotFoundError("PDF file was not created")
+                
+        except subprocess.CalledProcessError as e:
+            logger.error(f"LibreOffice conversion failed: {str(e)}")
+            logger.error(f"Command output: {e.output}")
+            raise
         except Exception as e:
-            logger.warning(f"PDF conversion failed: {str(e)}")
+            logger.error(f"PDF conversion failed: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             # If PDF conversion fails, return the DOCX file
             with open(docx_filename, 'rb') as f:
                 response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -183,6 +214,7 @@ def generate_pdf(request, estimate_id):
 
     except Exception as e:
         logger.error(f"Error in generate_pdf: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         messages.error(request, f'Error generating document: {str(e)}')
         return redirect('dashboard')
 
