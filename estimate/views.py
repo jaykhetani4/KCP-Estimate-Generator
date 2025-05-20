@@ -18,6 +18,8 @@ import io
 from docx2pdf import convert
 import comtypes.client
 import pythoncom
+import pdfkit
+from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -171,24 +173,30 @@ def generate_pdf(request, estimate_id):
             logger.info("Replaced placeholders in document")
 
         try:
-            # Convert to PDF
+            # Convert to PDF using pdfkit
             pdf_filename = docx_filename.replace('.docx', '.pdf')
-            logger.info("Attempting PDF conversion")
+            logger.info("Attempting PDF conversion with pdfkit")
             
-            # Try to convert using Word automation
-            try:
-                pythoncom.CoInitialize()
-                word = comtypes.client.CreateObject('Word.Application')
-                word.Visible = False
-                doc = word.Documents.Open(docx_filename)
-                doc.SaveAs(pdf_filename, FileFormat=17)  # 17 represents PDF format
-                doc.Close()
-                word.Quit()
-                logger.info("PDF conversion successful using Word automation")
-            except Exception as e:
-                logger.error(f"Word automation failed: {str(e)}")
-                # If Word automation fails, return the DOCX file
-                raise
+            # First convert DOCX to HTML
+            doc = Document(docx_filename)
+            html_content = render_to_string('estimate/pdf_template.html', {
+                'estimate': estimate,
+                'current_year': datetime.now().year,
+            })
+            
+            # Configure pdfkit options
+            options = {
+                'page-size': 'A4',
+                'margin-top': '20mm',
+                'margin-right': '20mm',
+                'margin-bottom': '20mm',
+                'margin-left': '20mm',
+                'encoding': 'UTF-8',
+                'no-outline': None
+            }
+            
+            # Convert HTML to PDF
+            pdfkit.from_string(html_content, pdf_filename, options=options)
             
             if os.path.exists(pdf_filename):
                 logger.info(f"PDF file created successfully at: {pdf_filename}")
