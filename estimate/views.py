@@ -146,7 +146,7 @@ def generate_pdf(request, estimate_id):
             '<rate1>': str(estimate.price),
             '<rate2>': str(estimate.gst_amount),
             '<rate3>': str(estimate.transportation_charge),
-            '<rate4>': str(estimate.transportation_charge),
+            '<rate4>': str(estimate.loading_unloading_cost),
             '<rate5>': str(estimate.loading_unloading_cost),
             '<rate>': str(estimate.total_amount),
             '<year>': current_year,
