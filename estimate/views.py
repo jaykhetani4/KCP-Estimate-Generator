@@ -14,7 +14,7 @@ import tempfile
 import logging
 import traceback
 from docx_replace import docx_replace
-from docx2pdf import convert
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -168,12 +168,21 @@ def generate_pdf(request, estimate_id):
             logger.info("Replaced placeholders in document")
 
         try:
-            # Convert to PDF
+            # Convert to PDF using unoconv
             pdf_filename = docx_filename.replace('.docx', '.pdf')
-            logger.info("Attempting PDF conversion")
+            logger.info("Attempting PDF conversion with unoconv")
             
-            # Convert the document
-            convert(docx_filename, pdf_filename)
+            # Run unoconv command
+            result = subprocess.run(
+                ['unoconv', '-f', 'pdf', '-o', pdf_filename, docx_filename],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            logger.info(f"unoconv stdout: {result.stdout}")
+            if result.stderr:
+                logger.warning(f"unoconv stderr: {result.stderr}")
             
             if os.path.exists(pdf_filename):
                 logger.info(f"PDF file created successfully at: {pdf_filename}")
