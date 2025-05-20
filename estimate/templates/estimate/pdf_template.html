@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>KCP Estimate</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2cm;
+        }
+        .content {
+            margin-bottom: 2cm;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1cm;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 2cm;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KCP ESTIMATE</h1>
+    </div>
+
+    <div class="content">
+        <p><strong>Party Name:</strong> {{ estimate.party_name }}</p>
+        <p><strong>Date:</strong> {{ estimate.date }}</p>
+        <p><strong>Paver Block Type:</strong> {{ estimate.paver_block_type }}</p>
+
+        <table>
+            <tr>
+                <th>Description</th>
+                <th>Amount</th>
+            </tr>
+            <tr>
+                <td>Price</td>
+                <td>₹{{ estimate.price }}</td>
+            </tr>
+            <tr>
+                <td>GST ({{ estimate.gst_percentage }}%)</td>
+                <td>₹{{ estimate.gst_amount }}</td>
+            </tr>
+            <tr>
+                <td>Transportation Charge</td>
+                <td>₹{{ estimate.transportation_charge }}</td>
+            </tr>
+            <tr>
+                <td>Loading/Unloading Cost</td>
+                <td>₹{{ estimate.loading_unloading_cost }}</td>
+            </tr>
+            <tr>
+                <td><strong>Total Amount</strong></td>
+                <td><strong>₹{{ estimate.total_amount }}</strong></td>
+            </tr>
+        </table>
+
+        {% if estimate.notes %}
+        <div class="notes">
+            <h3>Notes:</h3>
+            <p>{{ estimate.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>© {{ current_year }} KCP. All rights reserved.</p>
+    </div>
+</body>
+</html> 

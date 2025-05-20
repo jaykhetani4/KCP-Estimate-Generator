@@ -13,7 +13,8 @@ from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
 import logging
 import traceback
-from docx2pdf import convert
+from weasyprint import HTML, CSS
+from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -169,12 +170,18 @@ def generate_pdf(request, estimate_id):
             logger.info(f"Saved DOCX file to: {docx_filename}")
 
         try:
-            # Convert DOCX to PDF using docx2pdf
-            pdf_filename = docx_filename.replace('.docx', '.pdf')
-            logger.info("Attempting PDF conversion with docx2pdf")
+            # Convert DOCX to HTML first
+            html_content = render_to_string('estimate/pdf_template.html', {
+                'estimate': estimate,
+                'current_year': current_year,
+            })
             
-            # Convert the document
-            convert(docx_filename, pdf_filename)
+            # Create PDF from HTML
+            pdf_filename = docx_filename.replace('.docx', '.pdf')
+            logger.info("Attempting PDF conversion with WeasyPrint")
+            
+            # Convert HTML to PDF
+            HTML(string=html_content).write_pdf(pdf_filename)
             
             if os.path.exists(pdf_filename):
                 logger.info(f"PDF file created successfully at: {pdf_filename}")
