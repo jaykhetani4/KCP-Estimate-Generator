@@ -1,0 +1,28 @@
+{% extends 'estimate/base.html' %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="text-center mb-4">KCP Estimate Generator</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.username.label_tag }}
+                    {{ form.username }}
+                </div>
+                <div class="mb-3">
+                    {{ form.password.label_tag }}
+                    {{ form.password }}
+                </div>
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        Invalid username or password.
+                    </div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,62 @@
+{% extends 'estimate/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Manage Paver Block Types</h2>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Add New Paver Block Type</h5>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    {{ form.name.label_tag }}
+                    {{ form.name }}
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Add Paver Block Type</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Existing Paver Block Types</h5>
+        {% if paver_blocks %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paver_block in paver_blocks %}
+                        <tr>
+                            <td>{{ paver_block.name }}</td>
+                            <td>
+                                <form action="{% url 'delete_paver_block' paver_block.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this paver block type?');">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">No paver block types found. Add your first paver block type!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

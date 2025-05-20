@@ -1,0 +1,93 @@
+{% extends 'estimate/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Create New Estimate</h2>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="estimateForm">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.party_name.id_for_label }}" class="form-label">Party Name</label>
+                    {{ form.party_name }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
+                    {{ form.date }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.paver_block_type.id_for_label }}" class="form-label">Paver Block Type</label>
+                    {{ form.paver_block_type }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.price.id_for_label }}" class="form-label">Price</label>
+                    {{ form.price }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.gst_percentage.id_for_label }}" class="form-label">GST Percentage</label>
+                    {{ form.gst_percentage }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.transportation_charge.id_for_label }}" class="form-label">Transportation Charge</label>
+                    {{ form.transportation_charge }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.loading_unloading_cost.id_for_label }}" class="form-label">Loading/Unloading Cost</label>
+                    {{ form.loading_unloading_cost }}
+                </div>
+            </div>
+            
+            {# Add the notes field #}
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+
+            <div class="text-end">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Create Estimate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('estimateForm');
+    const priceInput = document.getElementById('id_price');
+    const gstPercentageInput = document.getElementById('id_gst_percentage');
+    const transportationChargeInput = document.getElementById('id_transportation_charge');
+    const loadingUnloadingCostInput = document.getElementById('id_loading_unloading_cost');
+
+    function calculateTotal() {
+        const price = parseFloat(priceInput.value) || 0;
+        const gstPercentage = parseFloat(gstPercentageInput.value) || 0;
+        const transportationCharge = parseFloat(transportationChargeInput.value) || 0;
+        const loadingUnloadingCost = parseFloat(loadingUnloadingCostInput.value) || 0;
+
+        const gstAmount = (price * gstPercentage) / 100;
+        const total = price + gstAmount + transportationCharge + loadingUnloadingCost;
+
+        // You can display the total somewhere if needed
+        console.log('Total:', total);
+    }
+
+    [priceInput, gstPercentageInput, transportationChargeInput, loadingUnloadingCostInput].forEach(input => {
+        input.addEventListener('input', calculateTotal);
+    });
+});
+</script>
+{% endblock %} 
