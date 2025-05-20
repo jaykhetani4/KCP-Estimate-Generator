@@ -13,11 +13,7 @@ from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
 import logging
 import traceback
-from docx_replace import docx_replace
 import io
-from docx2pdf import convert
-import comtypes.client
-import pythoncom
 import pdfkit
 from django.template.loader import render_to_string
 
@@ -82,54 +78,26 @@ def delete_paver_block(request, paver_block_id):
         return redirect('manage_paver_blocks')
     return render(request, 'estimate/confirm_delete_paver_block.html', {'paver_block': paver_block})
 
-def replace_placeholders_in_element(element, replacements):
-    """Replaces placeholders in a paragraph or table cell, handling split runs."""
+def replace_text_in_docx(docx_path, replacements):
+    """Replace text in a DOCX file with given replacements."""
+    doc = Document(docx_path)
     
-    runs_to_process = []
-    if isinstance(element, Paragraph):
-        runs_to_process = element.runs
-    elif isinstance(element, _Cell):
-        for paragraph in element.paragraphs:
-            runs_to_process.extend(paragraph.runs)
-    else:
-        # Not a paragraph or cell we can process runs from
-        return
-
-    # Combine text from all runs to find full placeholder strings
-    full_text = "".join([run.text for run in runs_to_process])
-
-    for placeholder, value in replacements.items():
-        if placeholder in full_text:
-            # Find the start index of the placeholder in the combined text
-            start_index = full_text.find(placeholder)
-            # Calculate the end index
-            end_index = start_index + len(placeholder)
-
-            current_index = 0
-            runs_involved = []
-
-            # Identify the runs that contain parts of the placeholder
-            for run in runs_to_process:
-                run_start = current_index
-                run_end = current_index + len(run.text)
-
-                # Check for overlap between run text range and placeholder text range
-                if max(start_index, run_start) < min(end_index, run_end):
-                    runs_involved.append(run)
-
-                current_index = run_end
-
-            # Replace the placeholder text across the involved runs
-            if runs_involved:
-                # Replace the part of the placeholder in the first involved run
-                first_run = runs_involved[0]
-                # Calculate the position within the first run where the placeholder starts
-                pos_in_first_run = start_index - full_text.find(first_run.text)
-                first_run.text = first_run.text[:pos_in_first_run] + value + first_run.text[pos_in_first_run + (end_index - start_index):]
-
-                # Clear the text in any subsequent involved runs
-                for subsequent_run in runs_involved[1:]:
-                    subsequent_run.text = ""
+    # Replace in paragraphs
+    for paragraph in doc.paragraphs:
+        for key, value in replacements.items():
+            if key in paragraph.text:
+                paragraph.text = paragraph.text.replace(key, str(value))
+    
+    # Replace in tables
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for key, value in replacements.items():
+                        if key in paragraph.text:
+                            paragraph.text = paragraph.text.replace(key, str(value))
+    
+    return doc
 
 @login_required
 def generate_pdf(request, estimate_id):
@@ -169,7 +137,8 @@ def generate_pdf(request, estimate_id):
             }
             
             # Replace placeholders in the document
-            docx_replace(docx_filename, replacements)
+            doc = replace_text_in_docx(docx_filename, replacements)
+            doc.save(docx_filename)
             logger.info("Replaced placeholders in document")
 
         try:
