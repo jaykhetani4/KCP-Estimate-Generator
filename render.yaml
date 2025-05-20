@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kcp-estimate
+    env: python
+    buildCommand: |
+      curl -L https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bullseye_amd64.deb -o wkhtmltox.deb
+      dpkg -i wkhtmltox.deb || true
+      apt-get update && apt-get install -f -y
+      pip install -r requirements.txt
+      python manage.py collectstatic --no-input
+      python manage.py migrate
+    startCommand: gunicorn KCP.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0 
