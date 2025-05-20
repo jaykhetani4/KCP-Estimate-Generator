@@ -11,10 +11,9 @@ from datetime import datetime
 from .models import Estimate, PaverBlockType
 from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
-import subprocess
 import logging
 import traceback
-import shutil
+from docx2pdf import convert
 
 logger = logging.getLogger(__name__)
 
@@ -170,41 +169,12 @@ def generate_pdf(request, estimate_id):
             logger.info(f"Saved DOCX file to: {docx_filename}")
 
         try:
-            # Try to convert using LibreOffice if available
+            # Convert DOCX to PDF using docx2pdf
             pdf_filename = docx_filename.replace('.docx', '.pdf')
-            logger.info("Attempting PDF conversion with LibreOffice")
+            logger.info("Attempting PDF conversion with docx2pdf")
             
-            # Check for LibreOffice installation
-            soffice_paths = [
-                '/usr/bin/soffice',  # Linux
-                '/usr/lib/libreoffice/program/soffice',  # Linux alternative
-                'C:\\Program Files\\LibreOffice\\program\\soffice.exe',  # Windows
-                'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',  # Windows 32-bit
-            ]
-            
-            soffice_path = None
-            for path in soffice_paths:
-                if os.path.exists(path):
-                    soffice_path = path
-                    break
-            
-            if not soffice_path:
-                logger.error("LibreOffice not found in common locations")
-                raise FileNotFoundError("LibreOffice not found. Please ensure it is installed.")
-            
-            logger.info(f"Using LibreOffice at: {soffice_path}")
-            
-            # Run LibreOffice conversion
-            result = subprocess.run(
-                [soffice_path, '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            
-            logger.info(f"LibreOffice conversion output: {result.stdout}")
-            if result.stderr:
-                logger.warning(f"LibreOffice conversion warnings: {result.stderr}")
+            # Convert the document
+            convert(docx_filename, pdf_filename)
             
             if os.path.exists(pdf_filename):
                 logger.info(f"PDF file created successfully at: {pdf_filename}")
@@ -218,10 +188,6 @@ def generate_pdf(request, estimate_id):
                 logger.error(f"PDF file not created at expected location: {pdf_filename}")
                 raise FileNotFoundError("PDF file was not created")
                 
-        except subprocess.CalledProcessError as e:
-            logger.error(f"LibreOffice conversion failed: {str(e)}")
-            logger.error(f"Command output: {e.output}")
-            raise
         except Exception as e:
             logger.error(f"PDF conversion failed: {str(e)}")
             logger.error(f"Traceback: {traceback.format_exc()}")
