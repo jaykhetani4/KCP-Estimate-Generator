@@ -14,6 +14,7 @@ import tempfile
 import subprocess
 import logging
 import traceback
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -173,9 +174,29 @@ def generate_pdf(request, estimate_id):
             pdf_filename = docx_filename.replace('.docx', '.pdf')
             logger.info("Attempting PDF conversion with LibreOffice")
             
+            # Check for LibreOffice installation
+            soffice_paths = [
+                '/usr/bin/soffice',  # Linux
+                '/usr/lib/libreoffice/program/soffice',  # Linux alternative
+                'C:\\Program Files\\LibreOffice\\program\\soffice.exe',  # Windows
+                'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',  # Windows 32-bit
+            ]
+            
+            soffice_path = None
+            for path in soffice_paths:
+                if os.path.exists(path):
+                    soffice_path = path
+                    break
+            
+            if not soffice_path:
+                logger.error("LibreOffice not found in common locations")
+                raise FileNotFoundError("LibreOffice not found. Please ensure it is installed.")
+            
+            logger.info(f"Using LibreOffice at: {soffice_path}")
+            
             # Run LibreOffice conversion
             result = subprocess.run(
-                ['soffice', '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename],
+                [soffice_path, '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename],
                 capture_output=True,
                 text=True,
                 check=True
