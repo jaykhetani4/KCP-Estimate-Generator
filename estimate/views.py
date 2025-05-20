@@ -10,8 +10,9 @@ import os
 from datetime import datetime
 from .models import Estimate, PaverBlockType
 from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
-import subprocess
 import tempfile
+import comtypes.client
+import pythoncom
 
 def login_view(request):
     if request.method == 'POST':
@@ -155,11 +156,26 @@ def generate_pdf(request, estimate_id):
         docx_filename = docx_file.name
         doc.save(docx_filename)
 
-    # Convert to PDF using LibreOffice
-    pdf_filename = docx_filename.replace('.docx', '.pdf')
     try:
-        # Try to convert using LibreOffice
-        subprocess.run(['soffice', '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename], check=True)
+        # Initialize COM
+        pythoncom.CoInitialize()
+        
+        # Create Word application
+        word = comtypes.client.CreateObject('Word.Application')
+        word.Visible = False
+        
+        # Open the document
+        doc = word.Documents.Open(os.path.abspath(docx_filename))
+        
+        # Create PDF filename
+        pdf_filename = docx_filename.replace('.docx', '.pdf')
+        
+        # Save as PDF
+        doc.SaveAs(os.path.abspath(pdf_filename), FileFormat=17)  # 17 represents PDF format
+        
+        # Close the document and Word
+        doc.Close()
+        word.Quit()
         
         # Read the generated PDF
         with open(pdf_filename, 'rb') as f:
@@ -169,17 +185,20 @@ def generate_pdf(request, estimate_id):
         # Clean up temporary files
         os.remove(docx_filename)
         os.remove(pdf_filename)
+        
         return response
-    except subprocess.CalledProcessError:
-        # If LibreOffice conversion fails, return the DOCX file instead
+        
+    except Exception as e:
+        # If PDF conversion fails, return the DOCX file
         with open(docx_filename, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
             response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.docx"'
         os.remove(docx_filename)
+        messages.warning(request, 'PDF conversion failed. Downloading DOCX file instead.')
         return response
-    except Exception as e:
-        messages.error(request, f'Error generating PDF: {str(e)}')
-        return redirect('dashboard')
+    finally:
+        # Clean up COM
+        pythoncom.CoUninitialize()
 
 @login_required
 def delete_estimate(request, estimate_id):
