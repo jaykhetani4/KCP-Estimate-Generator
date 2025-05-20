@@ -3,10 +3,10 @@ services:
     name: kcp-estimate
     env: python
     buildCommand: |
-      apt-get update
-      apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math libreoffice-base libreoffice-gnome libreoffice-gtk3
-      pip install -r requirements.txt
-      python manage.py collectstatic --no-input
+      apt-get update && \
+      apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math libreoffice-base libreoffice-gnome libreoffice-gtk3 && \
+      pip install -r requirements.txt && \
+      python manage.py collectstatic --no-input && \
       python manage.py migrate
     startCommand: gunicorn KCP.wsgi:application
     envVars:
