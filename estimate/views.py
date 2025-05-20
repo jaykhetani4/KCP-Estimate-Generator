@@ -13,9 +13,7 @@ from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
 import logging
 import traceback
-import io
-import pdfkit
-from django.template.loader import render_to_string
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -142,30 +140,31 @@ def generate_pdf(request, estimate_id):
             logger.info("Replaced placeholders in document")
 
         try:
-            # Convert to PDF using pdfkit
+            # Convert to PDF using LibreOffice
             pdf_filename = docx_filename.replace('.docx', '.pdf')
-            logger.info("Attempting PDF conversion with pdfkit")
+            logger.info("Attempting PDF conversion with LibreOffice")
             
-            # First convert DOCX to HTML
-            doc = Document(docx_filename)
-            html_content = render_to_string('estimate/pdf_template.html', {
-                'estimate': estimate,
-                'current_year': datetime.now().year,
-            })
+            # Try different LibreOffice paths
+            libreoffice_paths = [
+                'libreoffice',
+                '/usr/bin/libreoffice',
+                '/usr/lib/libreoffice/program/soffice',
+                '/opt/libreoffice/program/soffice'
+            ]
             
-            # Configure pdfkit options
-            options = {
-                'page-size': 'A4',
-                'margin-top': '20mm',
-                'margin-right': '20mm',
-                'margin-bottom': '20mm',
-                'margin-left': '20mm',
-                'encoding': 'UTF-8',
-                'no-outline': None
-            }
+            success = False
+            for path in libreoffice_paths:
+                try:
+                    cmd = [path, '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename]
+                    subprocess.run(cmd, check=True, capture_output=True)
+                    success = True
+                    break
+                except (subprocess.SubprocessError, FileNotFoundError) as e:
+                    logger.warning(f"Failed to use {path}: {str(e)}")
+                    continue
             
-            # Convert HTML to PDF
-            pdfkit.from_string(html_content, pdf_filename, options=options)
+            if not success:
+                raise Exception("Could not find or use LibreOffice")
             
             if os.path.exists(pdf_filename):
                 logger.info(f"PDF file created successfully at: {pdf_filename}")
