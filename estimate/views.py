@@ -20,6 +20,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 import docx2txt
+from docx2pdf import convert
 
 logger = logging.getLogger(__name__)
 
@@ -82,82 +83,58 @@ def delete_paver_block(request, paver_block_id):
         return redirect('manage_paver_blocks')
     return render(request, 'estimate/confirm_delete_paver_block.html', {'paver_block': paver_block})
 
-def replace_text_in_docx(docx_path, replacements):
-    """Replace text in a DOCX file with given replacements."""
-    doc = Document(docx_path)
-    
-    # Replace in paragraphs
-    for paragraph in doc.paragraphs:
-        for key, value in replacements.items():
-            if key in paragraph.text:
-                paragraph.text = paragraph.text.replace(key, str(value))
-    
-    # Replace in tables
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    for key, value in replacements.items():
-                        if key in paragraph.text:
-                            paragraph.text = paragraph.text.replace(key, str(value))
-    
-    return doc
+def replace_placeholders_in_element(element, replacements):
+    """Replace placeholders in a paragraph or cell while preserving formatting."""
+    if not hasattr(element, 'text') or not element.text:
+        return
 
-def create_pdf_from_docx(docx_path, replacements):
-    """Create a PDF from a DOCX file with replacements."""
-    # Extract text from DOCX
-    text = docx2txt.process(docx_path)
+    # First, check if any replacements are needed
+    needs_replacement = False
+    for key in replacements:
+        if key in element.text:
+            needs_replacement = True
+            break
     
-    # Apply replacements
+    if not needs_replacement:
+        return
+
+    # Store the original text and formatting
+    original_text = element.text
+    original_runs = []
+    for run in element.runs:
+        original_runs.append({
+            'text': run.text,
+            'bold': run.bold,
+            'italic': run.italic,
+            'underline': run.underline,
+            'font': run.font.name if run.font else None,
+            'size': run.font.size if run.font else None,
+            'color': run.font.color.rgb if run.font and run.font.color else None
+        })
+
+    # Clear all runs
+    for run in element.runs:
+        run.text = ''
+
+    # Apply replacements to the text
+    new_text = original_text
     for key, value in replacements.items():
-        text = text.replace(key, str(value))
-    
-    # Create PDF
-    buffer = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-    pdf_path = buffer.name
-    buffer.close()
-    
-    doc = SimpleDocTemplate(
-        pdf_path,
-        pagesize=letter,
-        rightMargin=72,
-        leftMargin=72,
-        topMargin=72,
-        bottomMargin=72
-    )
-    
-    # Create styles
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=16,
-        spaceAfter=30
-    )
-    normal_style = ParagraphStyle(
-        'CustomNormal',
-        parent=styles['Normal'],
-        fontSize=12,
-        spaceAfter=12
-    )
-    
-    # Create content
-    content = []
-    
-    # Split text into paragraphs and create PDF content
-    paragraphs = text.split('\n\n')
-    for para in paragraphs:
-        if para.strip():
-            # Check if it's a title (you might want to adjust this logic)
-            if para.strip().isupper() or para.strip().startswith('KCP'):
-                content.append(Paragraph(para.strip(), title_style))
-            else:
-                content.append(Paragraph(para.strip(), normal_style))
-            content.append(Spacer(1, 12))
-    
-    # Build PDF
-    doc.build(content)
-    return pdf_path
+        new_text = new_text.replace(key, str(value))
+
+    # Add the new text with original formatting
+    if original_runs:
+        run = element.add_run(new_text)
+        run.bold = original_runs[0]['bold']
+        run.italic = original_runs[0]['italic']
+        run.underline = original_runs[0]['underline']
+        if original_runs[0]['font']:
+            run.font.name = original_runs[0]['font']
+        if original_runs[0]['size']:
+            run.font.size = original_runs[0]['size']
+        if original_runs[0]['color']:
+            run.font.color.rgb = original_runs[0]['color']
+    else:
+        element.add_run(new_text)
 
 @login_required
 def generate_pdf(request, estimate_id):
@@ -169,66 +146,68 @@ def generate_pdf(request, estimate_id):
             logger.error(f"Template file not found at: {template_path}")
             messages.error(request, 'Template file not found. Please contact support.')
             return redirect('dashboard')
-            
-        # Create temporary files
-        with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as docx_file:
-            docx_filename = docx_file.name
-            
-            # Copy template to temp file
+        
+        # Create a temporary copy of the template
+        with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as temp_docx:
+            temp_docx_path = temp_docx.name
             with open(template_path, 'rb') as src:
-                with open(docx_filename, 'wb') as dst:
-                    dst.write(src.read())
-            
-            logger.info(f"Copied template to: {docx_filename}")
-            
-            # Replace placeholders
-            replacements = {
-                '<partyname>': estimate.party_name,
-                '<date>': str(estimate.date),
-                '<paverblocktype>': str(estimate.paver_block_type),
-                '<rate1>': str(estimate.price),
-                '<rate2>': str(estimate.gst_amount),
-                '<rate3>': str(estimate.transportation_charge),
-                '<rate4>': str(estimate.loading_unloading_cost),
-                '<rate5>': str(estimate.loading_unloading_cost),
-                '<rate>': str(estimate.total_amount),
-                '<year>': str(datetime.now().year),
-                '<NOTE>': estimate.notes or '',
-            }
-            
-            # Replace placeholders in the document
-            doc = replace_text_in_docx(docx_filename, replacements)
-            doc.save(docx_filename)
-            logger.info("Replaced placeholders in document")
+                temp_docx.write(src.read())
+        
+        logger.info(f"Created temporary copy at: {temp_docx_path}")
+        
+        # Work with the copy
+        doc = Document(temp_docx_path)
+        current_year = str(datetime.now().year)
+        
+        replacements = {
+            '<partyname>': estimate.party_name,
+            '<date>': str(estimate.date),
+            '<paverblocktype>': str(estimate.paver_block_type),
+            '<rate1>': str(estimate.price),
+            '<rate2>': str(estimate.gst_amount),
+            '<rate3>': str(estimate.transportation_charge),
+            '<rate4>': str(estimate.transportation_charge),
+            '<rate5>': str(estimate.loading_unloading_cost),
+            '<rate>': str(estimate.total_amount),
+            '<year>': current_year,
+            '<NOTE>': estimate.notes or '',
+        }
+        
+        logger.info("Starting text replacements with values:")
+        for key, value in replacements.items():
+            logger.info(f"{key}: {value}")
 
-        try:
-            # Convert to PDF using reportlab
-            logger.info("Attempting PDF conversion with reportlab")
-            pdf_filename = create_pdf_from_docx(docx_filename, replacements)
-            
-            if os.path.exists(pdf_filename):
-                logger.info(f"PDF file created successfully at: {pdf_filename}")
-                with open(pdf_filename, 'rb') as f:
-                    response = HttpResponse(f.read(), content_type='application/pdf')
-                    response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.pdf"'
-                os.remove(pdf_filename)
-                os.remove(docx_filename)
-                return response
-            else:
-                logger.error(f"PDF file not created at expected location: {pdf_filename}")
-                raise FileNotFoundError("PDF file was not created")
-                
-        except Exception as e:
-            logger.error(f"PDF conversion failed: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            # If PDF conversion fails, return the DOCX file
-            with open(docx_filename, 'rb') as f:
-                response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-                response['Content-Disposition'] = f'attachment; filename="KCP-ESTIMATE-{estimate.party_name}.docx"'
-            os.remove(docx_filename)
-            messages.warning(request, 'PDF conversion failed. Downloading DOCX file instead.')
-            return response
+        # Replace in all paragraphs
+        for paragraph in doc.paragraphs:
+            replace_placeholders_in_element(paragraph, replacements)
 
+        # Replace in all tables (all cells)
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    for paragraph in cell.paragraphs:
+                        replace_placeholders_in_element(paragraph, replacements)
+
+        # Save the modified copy
+        doc.save(temp_docx_path)
+        logger.info("Saved modified document")
+        
+        # Convert the copy to PDF
+        pdf_filename = f'KCP-ESTIMATE-{estimate.party_name}.pdf'
+        logger.info(f"Converting to PDF: {pdf_filename}")
+        convert(temp_docx_path, pdf_filename)
+        
+        # Send the PDF
+        with open(pdf_filename, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{pdf_filename}"'
+        
+        # Clean up temporary files
+        os.remove(temp_docx_path)
+        os.remove(pdf_filename)
+        logger.info("Cleanup complete")
+        return response
+        
     except Exception as e:
         logger.error(f"Error in generate_pdf: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
