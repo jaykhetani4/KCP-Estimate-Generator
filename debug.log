@@ -1,0 +1,204 @@
+INFO 2025-05-20 12:25:20,941 autoreload 19576 3524 Watching for file changes with StatReloader
+INFO 2025-05-20 12:25:26,937 basehttp 19576 6780 "GET / HTTP/1.1" 200 6402
+WARNING 2025-05-20 12:25:27,475 log 19576 6780 Not Found: /favicon.ico
+WARNING 2025-05-20 12:25:27,476 basehttp 19576 6780 "GET /favicon.ico HTTP/1.1" 404 179
+INFO 2025-05-20 12:25:35,163 basehttp 19576 6780 "POST / HTTP/1.1" 302 0
+INFO 2025-05-20 12:25:35,192 basehttp 19576 6780 "GET /dashboard/ HTTP/1.1" 200 10336
+INFO 2025-05-20 12:25:37,246 views 19576 6780 Saved DOCX file to: C:\Users\Jay\AppData\Local\Temp\tmp_frbob4h.docx
+INFO 2025-05-20 12:25:37,248 views 19576 6780 Attempting PDF conversion with LibreOffice
+ERROR 2025-05-20 12:25:37,258 views 19576 6780 PDF conversion failed: [WinError 2] The system cannot find the file specified
+ERROR 2025-05-20 12:25:37,264 views 19576 6780 Traceback: Traceback (most recent call last):
+  File "D:\KCP\estimate\views.py", line 177, in generate_pdf
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "C:\Users\Jay\anaconda3\Lib\subprocess.py", line 1538, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+INFO 2025-05-20 12:25:37,297 basehttp 19576 6780 "GET /generate-pdf/16/ HTTP/1.1" 200 32032
+INFO 2025-05-20 12:26:08,115 views 19576 6780 Saved DOCX file to: C:\Users\Jay\AppData\Local\Temp\tmpsok9qkfr.docx
+INFO 2025-05-20 12:26:08,117 views 19576 6780 Attempting PDF conversion with LibreOffice
+ERROR 2025-05-20 12:26:08,120 views 19576 6780 PDF conversion failed: [WinError 2] The system cannot find the file specified
+ERROR 2025-05-20 12:26:08,122 views 19576 6780 Traceback: Traceback (most recent call last):
+  File "D:\KCP\estimate\views.py", line 177, in generate_pdf
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "C:\Users\Jay\anaconda3\Lib\subprocess.py", line 1538, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+INFO 2025-05-20 12:26:08,143 basehttp 19576 6780 "GET /generate-pdf/14/ HTTP/1.1" 200 32061
+INFO 2025-05-20 12:26:17,732 autoreload 19576 3524 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:26:18,630 autoreload 12552 1672 Watching for file changes with StatReloader
+INFO 2025-05-20 12:27:38,113 autoreload 12552 1672 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:27:39,042 autoreload 16152 3144 Watching for file changes with StatReloader
+INFO 2025-05-20 12:27:50,673 autoreload 16152 3144 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:27:51,458 autoreload 11340 20372 Watching for file changes with StatReloader
+INFO 2025-05-20 12:28:01,027 autoreload 11340 20372 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:28:01,818 autoreload 21060 3544 Watching for file changes with StatReloader
+INFO 2025-05-20 12:28:13,341 autoreload 21060 3544 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:28:14,117 autoreload 19900 4032 Watching for file changes with StatReloader
+INFO 2025-05-20 12:28:29,133 basehttp 19900 21048 "GET / HTTP/1.1" 200 8571
+INFO 2025-05-20 12:28:40,374 basehttp 19900 21048 "POST / HTTP/1.1" 302 0
+INFO 2025-05-20 12:28:40,400 basehttp 19900 21048 "GET /dashboard/ HTTP/1.1" 200 10336
+INFO 2025-05-20 12:28:41,655 views 19900 21048 Saved DOCX file to: C:\Users\Jay\AppData\Local\Temp\tmpgm1tc113.docx
+INFO 2025-05-20 12:28:41,656 views 19900 21048 Attempting PDF conversion with LibreOffice
+ERROR 2025-05-20 12:28:41,657 views 19900 21048 LibreOffice not found in common locations
+ERROR 2025-05-20 12:28:41,657 views 19900 21048 PDF conversion failed: LibreOffice not found. Please ensure it is installed.
+ERROR 2025-05-20 12:28:41,658 views 19900 21048 Traceback: Traceback (most recent call last):
+  File "D:\KCP\estimate\views.py", line 193, in generate_pdf
+    raise FileNotFoundError("LibreOffice not found. Please ensure it is installed.")
+FileNotFoundError: LibreOffice not found. Please ensure it is installed.
+
+INFO 2025-05-20 12:28:41,682 basehttp 19900 21048 "GET /generate-pdf/16/ HTTP/1.1" 200 32034
+INFO 2025-05-20 12:28:44,848 views 19900 21048 Saved DOCX file to: C:\Users\Jay\AppData\Local\Temp\tmpgrhjz_5d.docx
+INFO 2025-05-20 12:28:44,848 views 19900 21048 Attempting PDF conversion with LibreOffice
+ERROR 2025-05-20 12:28:44,849 views 19900 21048 LibreOffice not found in common locations
+ERROR 2025-05-20 12:28:44,849 views 19900 21048 PDF conversion failed: LibreOffice not found. Please ensure it is installed.
+ERROR 2025-05-20 12:28:44,850 views 19900 21048 Traceback: Traceback (most recent call last):
+  File "D:\KCP\estimate\views.py", line 193, in generate_pdf
+    raise FileNotFoundError("LibreOffice not found. Please ensure it is installed.")
+FileNotFoundError: LibreOffice not found. Please ensure it is installed.
+
+INFO 2025-05-20 12:28:44,875 basehttp 19900 21048 "GET /generate-pdf/14/ HTTP/1.1" 200 32061
+INFO 2025-05-20 12:28:53,355 basehttp 19900 21048 "GET /dashboard/ HTTP/1.1" 200 10922
+INFO 2025-05-20 12:29:35,033 autoreload 19900 4032 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:29:35,826 autoreload 16432 8216 Watching for file changes with StatReloader
+INFO 2025-05-20 12:29:52,461 autoreload 16432 8216 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:29:53,374 autoreload 20724 21068 Watching for file changes with StatReloader
+INFO 2025-05-20 12:29:54,818 autoreload 20724 21068 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:29:55,609 autoreload 4364 10136 Watching for file changes with StatReloader
+INFO 2025-05-20 12:35:43,640 autoreload 4364 10136 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:35:44,895 autoreload 21384 16636 Watching for file changes with StatReloader
+INFO 2025-05-20 12:35:46,586 autoreload 21384 16636 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:35:47,483 autoreload 18536 20428 Watching for file changes with StatReloader
+INFO 2025-05-20 12:37:06,892 autoreload 18536 20428 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 12:37:07,802 autoreload 20860 11604 Watching for file changes with StatReloader
+INFO 2025-05-20 14:45:13,876 autoreload 21076 24260 Watching for file changes with StatReloader
+INFO 2025-05-20 14:48:26,087 autoreload 15344 3972 Watching for file changes with StatReloader
+INFO 2025-05-20 14:48:36,986 basehttp 15344 16172 "GET / HTTP/1.1" 200 7985
+INFO 2025-05-20 14:48:45,895 basehttp 15344 16172 "POST / HTTP/1.1" 200 8154
+INFO 2025-05-20 14:48:54,479 basehttp 15344 16172 "POST / HTTP/1.1" 302 0
+INFO 2025-05-20 14:48:54,515 basehttp 15344 16172 "GET /dashboard/ HTTP/1.1" 200 10336
+INFO 2025-05-20 14:48:57,646 basehttp 15344 16172 "GET /manage-paver-blocks/ HTTP/1.1" 200 19711
+INFO 2025-05-20 14:48:59,513 views 15344 16172 Copied template to: C:\Users\Jay\AppData\Local\Temp\tmp0v17eqvy.docx
+INFO 2025-05-20 14:48:59,760 views 15344 16172 Replaced placeholders in document
+INFO 2025-05-20 14:48:59,761 views 15344 16172 Attempting PDF conversion with pdfkit
+ERROR 2025-05-20 14:48:59,962 views 15344 16172 PDF conversion failed: No wkhtmltopdf executable found: "b''"
+If this file exists please check that this process can read it or you can pass path to it manually in method call, check README. Otherwise please install wkhtmltopdf - https://github.com/JazzCore/python-pdfkit/wiki/Installing-wkhtmltopdf
+ERROR 2025-05-20 14:48:59,969 views 15344 16172 Traceback: Traceback (most recent call last):
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\configuration.py", line 35, in __init__
+    with open(self.wkhtmltopdf) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: b''
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\KCP\estimate\views.py", line 168, in generate_pdf
+    pdfkit.from_string(html_content, pdf_filename, options=options)
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\api.py", line 72, in from_string
+    r = PDFKit(input, 'string', options=options, toc=toc, cover=cover, css=css,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\pdfkit.py", line 45, in __init__
+    self.configuration = (Configuration() if configuration is None
+                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\configuration.py", line 38, in __init__
+    raise IOError('No wkhtmltopdf executable found: "%s"\n'
+OSError: No wkhtmltopdf executable found: "b''"
+If this file exists please check that this process can read it or you can pass path to it manually in method call, check README. Otherwise please install wkhtmltopdf - https://github.com/JazzCore/python-pdfkit/wiki/Installing-wkhtmltopdf
+
+INFO 2025-05-20 14:48:59,973 basehttp 15344 16172 "GET /generate-pdf/16/ HTTP/1.1" 200 31752
+INFO 2025-05-20 14:53:58,455 autoreload 21076 24260 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 14:53:58,907 autoreload 15344 3972 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 14:53:59,028 autoreload 24284 13000 Watching for file changes with StatReloader
+INFO 2025-05-20 14:53:59,514 autoreload 800 26020 Watching for file changes with StatReloader
+INFO 2025-05-20 14:54:00,399 autoreload 24284 13000 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 14:54:00,853 autoreload 800 26020 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 14:54:00,994 autoreload 24264 27304 Watching for file changes with StatReloader
+INFO 2025-05-20 14:54:01,384 autoreload 8244 21168 Watching for file changes with StatReloader
+INFO 2025-05-20 14:54:09,621 basehttp 24264 21400 "GET / HTTP/1.1" 200 6402
+WARNING 2025-05-20 14:54:10,121 log 24264 21400 Not Found: /favicon.ico
+WARNING 2025-05-20 14:54:10,122 basehttp 24264 21400 "GET /favicon.ico HTTP/1.1" 404 179
+INFO 2025-05-20 14:54:16,157 basehttp 24264 21400 "POST / HTTP/1.1" 302 0
+INFO 2025-05-20 14:54:16,184 basehttp 24264 21400 "GET /dashboard/ HTTP/1.1" 200 10336
+INFO 2025-05-20 14:54:18,326 views 24264 21400 Copied template to: C:\Users\Jay\AppData\Local\Temp\tmpux_43fah.docx
+INFO 2025-05-20 14:54:18,554 views 24264 21400 Replaced placeholders in document
+ERROR 2025-05-20 14:54:18,704 views 24264 21400 PDF conversion failed: No wkhtmltopdf executable found: "b''"
+If this file exists please check that this process can read it or you can pass path to it manually in method call, check README. Otherwise please install wkhtmltopdf - https://github.com/JazzCore/python-pdfkit/wiki/Installing-wkhtmltopdf
+ERROR 2025-05-20 14:54:18,710 views 24264 21400 Traceback: Traceback (most recent call last):
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\configuration.py", line 35, in __init__
+    with open(self.wkhtmltopdf) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: b''
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\KCP\estimate\views.py", line 178, in generate_pdf
+    pdfkit.from_string(html_content, pdf_filename, options=options)
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\api.py", line 72, in from_string
+    r = PDFKit(input, 'string', options=options, toc=toc, cover=cover, css=css,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\pdfkit.py", line 45, in __init__
+    self.configuration = (Configuration() if configuration is None
+                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\configuration.py", line 38, in __init__
+    raise IOError('No wkhtmltopdf executable found: "%s"\n'
+OSError: No wkhtmltopdf executable found: "b''"
+If this file exists please check that this process can read it or you can pass path to it manually in method call, check README. Otherwise please install wkhtmltopdf - https://github.com/JazzCore/python-pdfkit/wiki/Installing-wkhtmltopdf
+
+INFO 2025-05-20 14:54:18,714 basehttp 24264 21400 "GET /generate-pdf/14/ HTTP/1.1" 200 31780
+INFO 2025-05-20 14:54:22,394 views 24264 21400 Copied template to: C:\Users\Jay\AppData\Local\Temp\tmpoy9lvek7.docx
+INFO 2025-05-20 14:54:22,560 views 24264 21400 Replaced placeholders in document
+ERROR 2025-05-20 14:54:22,714 views 24264 21400 PDF conversion failed: No wkhtmltopdf executable found: "b''"
+If this file exists please check that this process can read it or you can pass path to it manually in method call, check README. Otherwise please install wkhtmltopdf - https://github.com/JazzCore/python-pdfkit/wiki/Installing-wkhtmltopdf
+ERROR 2025-05-20 14:54:22,716 views 24264 21400 Traceback: Traceback (most recent call last):
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\configuration.py", line 35, in __init__
+    with open(self.wkhtmltopdf) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: b''
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\KCP\estimate\views.py", line 178, in generate_pdf
+    pdfkit.from_string(html_content, pdf_filename, options=options)
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\api.py", line 72, in from_string
+    r = PDFKit(input, 'string', options=options, toc=toc, cover=cover, css=css,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\pdfkit.py", line 45, in __init__
+    self.configuration = (Configuration() if configuration is None
+                          ^^^^^^^^^^^^^^^
+  File "C:\Users\Jay\anaconda3\Lib\site-packages\pdfkit\configuration.py", line 38, in __init__
+    raise IOError('No wkhtmltopdf executable found: "%s"\n'
+OSError: No wkhtmltopdf executable found: "b''"
+If this file exists please check that this process can read it or you can pass path to it manually in method call, check README. Otherwise please install wkhtmltopdf - https://github.com/JazzCore/python-pdfkit/wiki/Installing-wkhtmltopdf
+
+INFO 2025-05-20 14:54:22,719 basehttp 24264 21400 "GET /generate-pdf/16/ HTTP/1.1" 200 31752
+INFO 2025-05-20 15:01:26,227 autoreload 8244 21168 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 15:01:26,237 autoreload 24264 27304 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 15:01:27,480 autoreload 25844 4756 Watching for file changes with StatReloader
+INFO 2025-05-20 15:01:27,480 autoreload 12532 26916 Watching for file changes with StatReloader
+INFO 2025-05-20 15:03:33,378 autoreload 12532 26916 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 15:03:33,383 autoreload 25844 4756 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 15:03:34,321 autoreload 26448 26320 Watching for file changes with StatReloader
+INFO 2025-05-20 15:03:34,321 autoreload 24508 25700 Watching for file changes with StatReloader
+INFO 2025-05-20 15:03:37,767 autoreload 24508 25700 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 15:03:37,771 autoreload 26448 26320 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 15:03:38,523 autoreload 24512 27596 Watching for file changes with StatReloader
+INFO 2025-05-20 15:03:38,523 autoreload 18676 23296 Watching for file changes with StatReloader
+INFO 2025-05-20 15:09:01,805 autoreload 18676 23296 D:\KCP\estimate\views.py changed, reloading.
+INFO 2025-05-20 15:09:02,668 autoreload 27556 8516 Watching for file changes with StatReloader

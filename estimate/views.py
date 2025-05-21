@@ -13,7 +13,13 @@ from .forms import CustomLoginForm, EstimateForm, PaverBlockTypeForm
 import tempfile
 import logging
 import traceback
-import subprocess
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+import docx2txt
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +103,62 @@ def replace_text_in_docx(docx_path, replacements):
     
     return doc
 
+def create_pdf_from_docx(docx_path, replacements):
+    """Create a PDF from a DOCX file with replacements."""
+    # Extract text from DOCX
+    text = docx2txt.process(docx_path)
+    
+    # Apply replacements
+    for key, value in replacements.items():
+        text = text.replace(key, str(value))
+    
+    # Create PDF
+    buffer = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+    pdf_path = buffer.name
+    buffer.close()
+    
+    doc = SimpleDocTemplate(
+        pdf_path,
+        pagesize=letter,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    # Create styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30
+    )
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=12,
+        spaceAfter=12
+    )
+    
+    # Create content
+    content = []
+    
+    # Split text into paragraphs and create PDF content
+    paragraphs = text.split('\n\n')
+    for para in paragraphs:
+        if para.strip():
+            # Check if it's a title (you might want to adjust this logic)
+            if para.strip().isupper() or para.strip().startswith('KCP'):
+                content.append(Paragraph(para.strip(), title_style))
+            else:
+                content.append(Paragraph(para.strip(), normal_style))
+            content.append(Spacer(1, 12))
+    
+    # Build PDF
+    doc.build(content)
+    return pdf_path
+
 @login_required
 def generate_pdf(request, estimate_id):
     try:
@@ -140,31 +202,9 @@ def generate_pdf(request, estimate_id):
             logger.info("Replaced placeholders in document")
 
         try:
-            # Convert to PDF using LibreOffice
-            pdf_filename = docx_filename.replace('.docx', '.pdf')
-            logger.info("Attempting PDF conversion with LibreOffice")
-            
-            # Try different LibreOffice paths
-            libreoffice_paths = [
-                'libreoffice',
-                '/usr/bin/libreoffice',
-                '/usr/lib/libreoffice/program/soffice',
-                '/opt/libreoffice/program/soffice'
-            ]
-            
-            success = False
-            for path in libreoffice_paths:
-                try:
-                    cmd = [path, '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(docx_filename), docx_filename]
-                    subprocess.run(cmd, check=True, capture_output=True)
-                    success = True
-                    break
-                except (subprocess.SubprocessError, FileNotFoundError) as e:
-                    logger.warning(f"Failed to use {path}: {str(e)}")
-                    continue
-            
-            if not success:
-                raise Exception("Could not find or use LibreOffice")
+            # Convert to PDF using reportlab
+            logger.info("Attempting PDF conversion with reportlab")
+            pdf_filename = create_pdf_from_docx(docx_filename, replacements)
             
             if os.path.exists(pdf_filename):
                 logger.info(f"PDF file created successfully at: {pdf_filename}")
